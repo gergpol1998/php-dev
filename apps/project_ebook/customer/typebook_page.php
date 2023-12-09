@@ -3,6 +3,7 @@ session_start();
 if (isset($_GET['typeid']) && isset($_GET['typename'])) {
     $typeid = $_GET['typeid'];
     $typename = $_GET['typename'];
+    $proid = null;
 }
 ?>
 <!DOCTYPE html>
