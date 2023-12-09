@@ -1,6 +1,7 @@
 <?php
 include "function.php";
 connectdb();
+ob_start();
 session_start();
 echo "<script> src ='https://code.jquery.com/jquery-3.6.1.min.js' 
 </script>
@@ -81,6 +82,7 @@ for ($i = 1; $i <= $pagecount; $i++) {
     }
 }
 $mpdf->Output();
+ob_end_flush();
 connectdb()->close();
 ?>
 

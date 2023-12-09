@@ -1,6 +1,7 @@
 <?php
 include "function.php";
 connectdb();
+ob_start();
 echo "<script src='function.js'></script>";
 
 if (isset($_GET['bookid'])) {
@@ -63,5 +64,6 @@ for ($i = 1; $i <= $pagecount; $i++) {
     }
 }
 $mpdf->Output();
+ob_end_flush();
 connectdb()->close();
 ?>

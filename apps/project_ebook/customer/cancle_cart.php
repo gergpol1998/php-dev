@@ -2,6 +2,7 @@
 session_start();
 include "function.php";
 connectdb();
+ob_start();
 
 echo "<script> src ='https://code.jquery.com/jquery-3.6.1.min.js' 
     </script>
@@ -29,6 +30,7 @@ if ($act == 'cancle') {
     }
     else{
         header("location:cart.php");
+        ob_end_flush();
     }
 }
 connectdb()->close();

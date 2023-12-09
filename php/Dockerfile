@@ -4,6 +4,10 @@ FROM php:8.3-fpm
 RUN docker-php-ext-install mysqli pdo pdo_mysql && docker-php-ext-enable mysqli
 RUN apt-get update && apt-get upgrade -y
 
+
 # Increase upload size
 RUN echo "upload_max_filesize = 1000M" >> /usr/local/etc/php/conf.d/uploads.ini
 RUN echo "post_max_size = 1000M" >> /usr/local/etc/php/conf.d/uploads.ini
+
+# Increase memory limit
+RUN echo "memory_limit = 1000M" >> /usr/local/etc/php/conf.d/memory_limit.ini

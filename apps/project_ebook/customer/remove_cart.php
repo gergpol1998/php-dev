@@ -2,6 +2,7 @@
 session_start();
 include "function.php";
 connectdb();
+ob_start();
 
 echo "<script> src ='https://code.jquery.com/jquery-3.6.1.min.js' 
     </script>
@@ -30,6 +31,7 @@ if (isset($_GET['bookid']) && isset($_REQUEST['act'])){
         }
         else{
             header("location:cart.php");
+            ob_end_flush();
         }
     }
 }
