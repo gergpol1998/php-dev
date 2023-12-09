@@ -16,36 +16,43 @@ function connectdb(){
     //echo "Connected successfully";
     return $conn;
 }
-function autoid($label,$max_id,$table,$null_id){
-    $code = $label; //กำหนดอักษรนำหน้า
-    $yearMonth = substr(date("Y") + 543, -2) . date("m"); //ดึงค่าปี เดือน ปัจจุบัน
-    //query MAX ID
+function autoid($label, $max_id, $table, $null_id){
+    $code = $label; // Define the prefix
+    $yearMonth = substr(date("Y") + 543, -2) . date("m"); // Current year and month
+
+    // Query MAX ID from the database
     $sql = "SELECT MAX($max_id) AS LAST_ID FROM $table";
     $result = connectdb()->query($sql);
+
     if ($result->num_rows > 0) {
         $row = $result->fetch_assoc();
-        $maxId = substr($row['LAST_ID'],-7); //ดึงค่าไอดีล่าสุดจากตารางข้อมูลที่จะบันทึก
-    
-    if ($maxId == '') {
-        $maxId = $null_id;
-    } else {
-            $lastyear = substr($row['LAST_ID'],4,-9);
-            $lastmonth = substr($row['LAST_ID'],6,-7);
+        $lastId = $row['LAST_ID'];
+
+        if ($lastId !== null) {
+            $maxId = substr($lastId, -7); // Extract part of the last ID
+
+            $lastyear = substr($lastId, 4, -9);
+            $lastmonth = substr($lastId, 6, -7);
             $currentyear = substr(date("Y") + 543, -2);
             $currentmonth = date("m");
 
-            if ($lastyear !== $currentyear || $lastmonth !== $currentmonth){
+            if ($lastyear !== $currentyear || $lastmonth !== $currentmonth) {
                 $maxId = $null_id;
+            } else {
+                $maxId = $maxId + 1; // Increment the ID
             }
-            else{
-                $maxId = ($maxId + 1);  //บวกค่าเพิ่มอีก 1
-            }
+        } else {
+            $maxId = $null_id; // Default value if last ID is null
+        }
+
+        $maxId = str_pad($maxId, 7, '0', STR_PAD_LEFT); // Pad the ID with zeros
+        $nextId = $code . $yearMonth . $maxId; // Form the next ID
+        return $nextId;
     }
-    $maxId = str_pad($maxId,7,'0',STR_PAD_LEFT);
-    $nextId = $code . $yearMonth . $maxId; //นำข้อมูลทั้งหมดมารวมกัน
-    return $nextId;
-    }
+    // Return default ID if no row is returned
+    return $code . $yearMonth . str_pad($null_id, 7, '0', STR_PAD_LEFT);
 }
+
 
 function tagautoid(){
     $code = "TAG-"; //กำหนดอักษรนำหน้า
