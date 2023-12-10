@@ -2,7 +2,7 @@
 error_reporting(E_ALL & ~E_WARNING);
 ini_set('display_errors', 'Off');
 function conn(){
-    $servername = "103.114.200.105:9906";
+    $servername = "45.150.131.236:9906";
     $username = "root";
     $password = "root";
     $db = "ebook";
