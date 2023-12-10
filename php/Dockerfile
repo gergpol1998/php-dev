@@ -1,9 +1,27 @@
-FROM php:8.3-fpm
+FROM php:8.2-fpm
 
-# Install extensions
-RUN docker-php-ext-install mysqli pdo pdo_mysql && docker-php-ext-enable mysqli
-RUN apt-get update && apt-get upgrade -y
+# Update and install necessary packages
+RUN apt-get update && apt-get install -y \
+        libpng-dev \
+        libjpeg-dev \
+        libfreetype6-dev \
+        libwebp-dev \
+        libxpm-dev \
+        zip \
+        unzip \
+        git
 
+# Install and enable PHP extensions
+RUN docker-php-ext-configure gd \
+        --with-jpeg \
+        --with-freetype \
+        --with-webp \
+        --with-xpm \
+    && docker-php-ext-install -j$(nproc) gd mysqli pdo pdo_mysql \
+    && docker-php-ext-enable gd mysqli
+
+# Install Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # Increase upload size
 RUN echo "upload_max_filesize = 1000M" >> /usr/local/etc/php/conf.d/uploads.ini

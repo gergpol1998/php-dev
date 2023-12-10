@@ -25,11 +25,8 @@ session_start();
     FROM book
     INNER JOIN receipt_detail ON book.book_id = receipt_detail.recd_bookid
     INNER JOIN receipt ON receipt.rec_id = receipt_detail.recd_recid
-    INNER JOIN publisher ON publisher.pub_id = book.book_pubid
-    INNER JOIN customer ON customer.cus_id = publisher.pub_cusid
-    LEFT OUTER JOIN bookpro ON book.book_id = bpro_bookid
     WHERE book_status = '2' AND DATE_FORMAT(receipt.rec_date, '%m') = DATE_FORMAT(CURDATE(), '%m')
-    GROUP BY book_id, bpro_proid
+    GROUP BY book_id
     ORDER BY COUNT(receipt_detail.recd_bookid) DESC LIMIT 2;";
     $result = connectdb()->query($sql);
     
