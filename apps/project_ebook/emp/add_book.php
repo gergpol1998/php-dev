@@ -99,7 +99,6 @@ conn();
                         </div>\
                     </div>');
             });
-
         });
     </script>
 </body>

@@ -93,85 +93,35 @@ if (!isset($_SESSION['cusid'])) {
         </div>
 
         <?php
-        $sqlbookname = "SELECT book_name FROM book
-                    INNER JOIN publisher ON pub_id = book_pubid
-                    INNER JOIN customer ON cus_id = pub_cusid
-                    WHERE pub_cusid = '$cusid' AND book_status = '2'";
-        $ex_sqlbookname = connectdb()->query($sqlbookname);
-        ?>
 
-        <form action="dash_board2.php" method="get">
-            <div class="mb-3">
-                <label for="book_name" class="form-label">เลือกหนังสือ</label>
-                <select class="form-select" name="book_name">
-                    <option value="">--เลือกหนังสือ--</option>
-                    <?php
-                    if ($ex_sqlbookname->num_rows > 0) {
-                        while ($row = $ex_sqlbookname->fetch_assoc()) {
-                            $bookName = $row['book_name'];
-                            echo "<option value=\"$bookName\">$bookName</option>";
-                        }
-                    }
-                    ?>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="year" class="form-label">เลือกปี</label>
-                <select id="year" class="form-select" name="year">
-                    <option value="">--เลือกปี--</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="month" class="form-label">เลือกเดือน</label>
-                <select id="month" class="form-select" name="month">
-                    <option value="">--เลือกเดือน--</option>
-                    <option value="01">01</option>
-                    <option value="02">02</option>
-                    <option value="03">03</option>
-                    <option value="04">04</option>
-                    <option value="05">05</option>
-                    <option value="06">06</option>
-                    <option value="07">07</option>
-                    <option value="08">08</option>
-                    <option value="09">09</option>
-                    <option value="10">10</option>
-                    <option value="11">11</option>
-                    <option value="12">12</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn btn-primary">ค้นหา</button>
-        </form>
-        <?php
-
-        if (isset($_GET['year']) && isset($_GET['month']) && isset($_GET['book_name'])) {
-            // รับค่าช่วงเวลาจากฟอร์ม
-            $bname = $_GET['book_name'];
+        if (isset($_SESSION['cusid'])) {
             $cusid = $_SESSION['cusid'];
-            $year = $_GET['year'];
-            $month = $_GET['month'];
 
             $sqlpub = "select pub_id from publisher inner join customer on cus_id = pub_cusid
             where pub_cusid = '$cusid'";
+
             $ex_pub = connectdb()->query($sqlpub);
             if ($ex_pub->num_rows > 0) {
                 $row = $ex_pub->fetch_assoc();
                 $pubid = $row['pub_id'];
 
-                $col = "*,count(recd_bookid) as total_quantity";
+
+                $col = "recd_bookid,DATE_FORMAT(rec_date, '%Y-%m-%d') as new_date, book_name,
+                count(recd_bookid) as total_quantity";
                 $table = "book
                 INNER JOIN receipt_detail ON book.book_id = receipt_detail.recd_bookid
                 INNER JOIN receipt ON receipt.rec_id = receipt_detail.recd_recid
                 INNER JOIN publisher ON publisher.pub_id = book.book_pubid
                 INNER JOIN customer ON customer.cus_id = publisher.pub_cusid";
-                $where = "UPPER(book_name) LIKE UPPER('%$bname%') AND YEAR(rec_date) = '$year' AND MONTH(rec_date) = '$month' AND pub_id = '$pubid'
-                GROUP BY DATE_FORMAT(rec_date, '%Y-%m-%d') DESC ";
+                $where = "pub_id = '$pubid' AND YEAR(rec_date) = YEAR(CURRENT_DATE) AND rec_date <= CURRENT_DATE
+                GROUP BY recd_bookid
+                ORDER BY rec_date ASC";
                 $sqlbook = select_where($col, $table, $where);
 
                 // สร้าง arrays สำหรับเก็บข้อมูลที่ดึงมาจากฐานข้อมูล
                 $book_names = array();
                 $sales = array();
-                $sales_date = array();
+                $date = array();
 
                 if ($sqlbook->num_rows > 0) {
 
@@ -180,7 +130,7 @@ if (!isset($_SESSION['cusid'])) {
 
                         array_push($book_names, $row["book_name"]);
                         array_push($sales, $row['total_quantity']);
-                        array_push($sales_date, $row['book_name'] . " - " . $row['rec_date']);
+                        array_push($date, $row['new_date']);
                     }
                 } else {
                     echo "ไม่พบข้อมูล";
@@ -194,44 +144,76 @@ if (!isset($_SESSION['cusid'])) {
         <canvas id="myChart"></canvas>
 
         <script>
-            // สร้างกราฟแท่ง
+            // Sample data for demonstration purposes
+            var bookNames = <?php echo json_encode($book_names); ?>;
+            var salesData = <?php echo json_encode($sales); ?>;
+            var date = <?php echo json_encode($date); ?>;
+            var datasets = []; // Array to store datasets
+
+            // Define an array of dynamic colors
+            var dynamicColors = function() {
+                var r = Math.floor(Math.random() * 255);
+                var g = Math.floor(Math.random() * 255);
+                var b = Math.floor(Math.random() * 255);
+                return "rgba(" + r + "," + g + "," + b + ", 0.2)";
+            };
+
+            // Loop through book names to create datasets
+            for (var i = 0; i < date.length; i++) {
+                var dataset = {
+                    label: date[i],
+                    data: [], // Array to store sales data for the current book
+                    backgroundColor: dynamicColors(), // Use dynamicColors function for dynamic color
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                };
+
+                // Loop through sales data to extract sales values for the current book
+                for (var j = 0; j < salesData.length; j++) {
+                    dataset.data.push(salesData[j][i]); // Assuming the sales amount is stored in the 'amount' property
+                }
+
+                // Add the dataset to the array
+                datasets.push(dataset);
+            }
+
+            // Create the chart
             var ctx = document.getElementById('myChart').getContext('2d');
             var myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: <?php echo json_encode($sales_date); ?>,
-                    datasets: [{
-                        label: 'จำนวนขาย',
-                        data: <?php echo json_encode($sales); ?>,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
+                    labels: <?php echo json_encode($book_names); ?>,
+                    datasets: datasets // Assign dynamically generated datasets
                 },
                 options: {
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: Math.round // You can customize the formatter function as per your requirement
+                        }
+                    },
                     scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'หนังสือ'
+                            }
+                        },
                         y: {
+                            title: {
+                                display: true,
+                                text: 'จำนวนขาย'
+                            },
                             beginAtZero: true
                         }
                     }
                 }
             });
         </script>
-
     </div>
 </body>
 <!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    var select = document.getElementById("year");
-    var currentYear = new Date().getFullYear();
-    var startYear = 1990; // เปลี่ยนเป็นปีเริ่มต้นที่คุณต้องการ
-    for (var i = startYear; i <= currentYear; i++) {
-        var opt = document.createElement('option');
-        opt.value = i;
-        opt.innerHTML = i;
-        select.appendChild(opt);
-    }
-</script>
 
 </html>

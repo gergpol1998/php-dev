@@ -1,7 +1,7 @@
 <?php
 //connect db
 function connectdb(){
-    $servername = "45.150.131.236:9906";
+    $servername = "45.136.238.139:9906";
     $username = "root";
     $password = "root";
     $db = "ebook";
