@@ -32,6 +32,7 @@ if (!isset($_SESSION['cusid'])) {
     <!-- นำเข้า library Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+
 </head>
 
 <body>
@@ -118,19 +119,21 @@ if (!isset($_SESSION['cusid'])) {
                 $row = $ex_pub->fetch_assoc();
                 $pubid = $row['pub_id'];
 
-                $col = "*,count(recd_bookid) as total_quantity";
+                $col = "recd_bookid,DATE_FORMAT(rec_date, '%Y-%m-%d') as new_date ,book_name,count(recd_bookid) as total_quantity";
                 $table = "book
                 INNER JOIN receipt_detail ON book.book_id = receipt_detail.recd_bookid
                 INNER JOIN receipt ON receipt.rec_id = receipt_detail.recd_recid
                 INNER JOIN publisher ON publisher.pub_id = book.book_pubid
                 INNER JOIN customer ON customer.cus_id = publisher.pub_cusid";
                 $where = "DATE_FORMAT(rec_date, '%Y-%m-%d') BETWEEN '$start_date' AND '$end_date' AND pub_id = '$pubid'
-                GROUP BY recd_bookid";
+                GROUP BY recd_bookid
+                ORDER BY rec_date ASC";
                 $sqlbook = select_where($col, $table, $where);
 
                 // สร้าง arrays สำหรับเก็บข้อมูลที่ดึงมาจากฐานข้อมูล
                 $book_names = array();
                 $sales = array();
+                $date = array();
 
                 if ($sqlbook->num_rows > 0) {
 
@@ -139,6 +142,7 @@ if (!isset($_SESSION['cusid'])) {
 
                         array_push($book_names, $row["book_name"]);
                         array_push($sales, $row['total_quantity']);
+                        array_push($date, $row['new_date']);
                     }
                 } else {
                     echo "ไม่พบข้อมูล";
@@ -152,29 +156,73 @@ if (!isset($_SESSION['cusid'])) {
         <canvas id="myChart"></canvas>
 
         <script>
-            // สร้างกราฟแท่ง
+            // Sample data for demonstration purposes
+            var bookNames = <?php echo json_encode($book_names); ?>;
+            var salesData = <?php echo json_encode($sales); ?>;
+            var datasets = []; // Array to store datasets
+
+            // Define an array of dynamic colors
+            var dynamicColors = function() {
+                var r = Math.floor(Math.random() * 255);
+                var g = Math.floor(Math.random() * 255);
+                var b = Math.floor(Math.random() * 255);
+                return "rgba(" + r + "," + g + "," + b + ", 0.2)";
+            };
+
+            // Loop through book names to create datasets
+            for (var i = 0; i < bookNames.length; i++) {
+                var dataset = {
+                    label: bookNames[i],
+                    data: [], // Array to store sales data for the current book
+                    backgroundColor: dynamicColors(), // Use dynamicColors function for dynamic color
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                };
+
+                // Loop through sales data to extract sales values for the current book
+                for (var j = 0; j < salesData.length; j++) {
+                    dataset.data.push(salesData[j][i]); // Assuming the sales amount is stored in the 'amount' property
+                }
+
+                // Add the dataset to the array
+                datasets.push(dataset);
+            }
+
+            // Create the chart
             var ctx = document.getElementById('myChart').getContext('2d');
             var myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: <?php echo json_encode($book_names); ?>,
-                    datasets: [{
-                        label: 'จำนวนขาย',
-                        data: <?php echo json_encode($sales); ?>,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
+                    labels: <?php echo json_encode($date); ?>,
+                    datasets: datasets // Assign dynamically generated datasets
                 },
                 options: {
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: Math.round // You can customize the formatter function as per your requirement
+                        }
+                    },
                     scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'วันที่ขาย'
+                            }
+                        },
                         y: {
+                            title: {
+                                display: true,
+                                text: 'จำนวนขาย'
+                            },
                             beginAtZero: true
                         }
                     }
                 }
             });
         </script>
+
     </div>
 </body>
 <!-- Bootstrap JS -->

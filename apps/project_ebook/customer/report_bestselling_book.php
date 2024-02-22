@@ -230,7 +230,7 @@ if (!isset($_SESSION['cusid'])) {
                 $row = $ex_pub->fetch_assoc();
                 $pubid = $row['pub_id'];
 
-                $col = "*,count(recd_bookid) as total_quantity,sum(recd_price) as sumtotal";
+                $col = "recd_bookid,DATE_FORMAT(rec_date, '%Y-%m-%d') as new_date ,book_name,count(recd_bookid) as total_quantity,sum(recd_price) as sumtotal";
                 $table = "book
                 INNER JOIN receipt_detail ON book.book_id = receipt_detail.recd_bookid
                 INNER JOIN receipt ON receipt.rec_id = receipt_detail.recd_recid
@@ -285,9 +285,9 @@ if (!isset($_SESSION['cusid'])) {
 
                         //show ในหน้า pdf
                         $tablebody .= '<tr style="border:1px solid #000;">
-                            <td style="border-right:1px solid #000;padding:3px;text-align:center;"  >' . $row['book_id'] . '</td>
+                            <td style="border-right:1px solid #000;padding:3px;text-align:center;"  >' . $row['recd_bookid'] . '</td>
                             <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['book_name'] . '</td>
-                            <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['rec_date'] . '</td>
+                            <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['new_date'] . '</td>
                             <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['total_quantity'] . '</td>
                             <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . number_format($row['sumtotal'], 2) . '</td>
 			            </tr>';
@@ -295,9 +295,9 @@ if (!isset($_SESSION['cusid'])) {
 
                         //show ในหน้าเว็บ
                         echo '<tr style="border:1px solid #000;">
-                            <td style="border-right:1px solid #000;padding:3px;text-align:center;"  >' . $row['book_id'] . '</td>
+                            <td style="border-right:1px solid #000;padding:3px;text-align:center;"  >' . $row['recd_bookid'] . '</td>
                             <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['book_name'] . '</td>
-                            <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['rec_date'] . '</td>
+                            <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['new_date'] . '</td>
                             <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['total_quantity'] . '</td>
                             <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . number_format($row['sumtotal'], 2) . '</td>
                         </tr>';
