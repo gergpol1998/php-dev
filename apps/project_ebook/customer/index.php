@@ -59,7 +59,7 @@ session_start();
             };
 
             $.ajax({
-                url: "http://localhost:5002/recommendation",
+                url: "http://45.136.238.139:5002/recommendation",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(requestData),
