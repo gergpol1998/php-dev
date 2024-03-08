@@ -159,9 +159,9 @@ if (!isset($_SESSION['cusid'])) {
             };
 
             // Loop through book names to create datasets
-            for (var i = 0; i < date.length; i++) {
+            for (var i = 0; i < bookNames.length; i++) {
                 var dataset = {
-                    label: date[i],
+                    label: bookNames[i],
                     data: [], // Array to store sales data for the current book
                     backgroundColor: dynamicColors(), // Use dynamicColors function for dynamic color
                     borderColor: 'rgba(75, 192, 192, 1)',
@@ -182,7 +182,7 @@ if (!isset($_SESSION['cusid'])) {
             var myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: <?php echo json_encode($book_names); ?>,
+                    labels: <?php echo json_encode($date); ?>,
                     datasets: datasets // Assign dynamically generated datasets
                 },
                 options: {
@@ -197,7 +197,7 @@ if (!isset($_SESSION['cusid'])) {
                         x: {
                             title: {
                                 display: true,
-                                text: 'หนังสือ'
+                                text: 'วันที่ขาย'
                             }
                         },
                         y: {
