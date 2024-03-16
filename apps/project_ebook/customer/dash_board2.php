@@ -29,9 +29,6 @@ if (!isset($_SESSION['cusid'])) {
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-    <!-- นำเข้า library Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 
 <body>
@@ -106,7 +103,7 @@ if (!isset($_SESSION['cusid'])) {
                 $pubid = $row['pub_id'];
 
 
-                $col = "recd_bookid,DATE_FORMAT(rec_date, '%Y-%m-%d') as new_date, book_name,
+                $col = "recd_bookid,DATE_FORMAT(rec_date, '%m') as new_date, book_name,
                 count(recd_bookid) as total_quantity";
                 $table = "book
                 INNER JOIN receipt_detail ON book.book_id = receipt_detail.recd_bookid
@@ -114,8 +111,8 @@ if (!isset($_SESSION['cusid'])) {
                 INNER JOIN publisher ON publisher.pub_id = book.book_pubid
                 INNER JOIN customer ON customer.cus_id = publisher.pub_cusid";
                 $where = "pub_id = '$pubid' AND YEAR(rec_date) = YEAR(CURRENT_DATE) AND rec_date <= CURRENT_DATE
-                GROUP BY recd_bookid
-                ORDER BY rec_date ASC";
+                GROUP BY new_date
+                ORDER BY new_date ASC";
                 $sqlbook = select_where($col, $table, $where);
 
                 // สร้าง arrays สำหรับเก็บข้อมูลที่ดึงมาจากฐานข้อมูล
@@ -132,85 +129,75 @@ if (!isset($_SESSION['cusid'])) {
                         array_push($sales, $row['total_quantity']);
                         array_push($date, $row['new_date']);
                     }
+
+                    // สร้างตัวแปรเก็บวันที่ทั้งหมดของเดือน 01-12
+                    $all_months = array_map(function ($month) {
+                        return sprintf("%02d", $month);
+                    }, range(1, 12));
+
+                    // ตรวจสอบและเติมข้อมูลที่หายไป
+                    foreach ($all_months as $month) {
+                        if (!in_array($month, $date)) {
+                            array_push($date, $month);
+                            array_push($book_names, "");
+                            array_push($sales, "0");
+                        }
+                    }
+
+                    // เรียงลำดับตามวันที่
+                    array_multisort($date, $book_names, $sales);
                 } else {
                     echo "ไม่พบข้อมูล";
                 }
             }
             connectdb()->close();
         }
+
+        $dataPoints = array();
+        $labels = $date;
+        $values = $sales;
+        $books = $book_names; 
+
+        // Loop through the labels, values, and books arrays to populate $dataPoints
+        for ($i = 0; $i < count($labels); $i++) {
+            $dataPoints[] = array("label" => $labels[$i], "y" => $values[$i], "indexLabel" => $books[$i], "indexLabelFontColor" => "black");
+        }
+
         ?>
 
-        <!-- สร้างกราฟแท่งด้วย canvas -->
-        <canvas id="myChart"></canvas>
-
         <script>
-            // Sample data for demonstration purposes
-            var bookNames = <?php echo json_encode($book_names); ?>;
-            var salesData = <?php echo json_encode($sales); ?>;
-            var date = <?php echo json_encode($date); ?>;
-            var datasets = []; // Array to store datasets
+            window.onload = function() {
+                const d = new Date();
+                let year = d.getFullYear();
 
-            // Define an array of dynamic colors
-            var dynamicColors = function() {
-                var r = Math.floor(Math.random() * 255);
-                var g = Math.floor(Math.random() * 255);
-                var b = Math.floor(Math.random() * 255);
-                return "rgba(" + r + "," + g + "," + b + ", 0.2)";
-            };
-
-            // Loop through book names to create datasets
-            for (var i = 0; i < bookNames.length; i++) {
-                var dataset = {
-                    label: bookNames[i],
-                    data: [], // Array to store sales data for the current book
-                    backgroundColor: dynamicColors(), // Use dynamicColors function for dynamic color
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                };
-
-                // Loop through sales data to extract sales values for the current book
-                for (var j = 0; j < salesData.length; j++) {
-                    dataset.data.push(salesData[j][i]); // Assuming the sales amount is stored in the 'amount' property
-                }
-
-                // Add the dataset to the array
-                datasets.push(dataset);
-            }
-
-            // Create the chart
-            var ctx = document.getElementById('myChart').getContext('2d');
-            var myChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: <?php echo json_encode($date); ?>,
-                    datasets: datasets // Assign dynamically generated datasets
-                },
-                options: {
-                    plugins: {
-                        datalabels: {
-                            anchor: 'end',
-                            align: 'top',
-                            formatter: Math.round // You can customize the formatter function as per your requirement
-                        }
+                var chart = new CanvasJS.Chart("chartContainer", {
+                    animationEnabled: true,
+                    theme: "light2",
+                    title: {
+                        text: "หนังสือขายดีในช่วงนี้"
                     },
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'วันที่ขาย'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'จำนวนขาย'
-                            },
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+                    axisY: {
+                        title: "จำนวนที่ขาย"
+                    },
+                    axisX: {
+                        title: `เดือนที่ขาย (ปี ${year})`
+                    },
+                    data: [{
+                        type: "column",
+                        yValueFormatString: "#,##0.##",
+                        indexLabel: "{y}",
+                        indexLabelPlacement: "inside",
+                        indexLabelFontColor: "white",
+                        dataPoints: <?php echo json_encode($dataPoints, JSON_NUMERIC_CHECK); ?>
+                    }]
+                });
+                chart.render();
+
+            }
         </script>
+
+        <div id="chartContainer" style="height: 370px; width: 100%;"></div>
+        <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
     </div>
 </body>
 <!-- Bootstrap JS -->

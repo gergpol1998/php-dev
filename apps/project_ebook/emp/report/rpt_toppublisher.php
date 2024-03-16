@@ -7,6 +7,10 @@ if (!isset($_SESSION["ID"])) {
     header("location:../login.php");
 }
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+
 require_once __DIR__ . '../../../customer/vendor/autoload.php';
 
 $defaultConfig = (new Mpdf\Config\ConfigVariables())->getDefaults();
@@ -130,4 +134,4 @@ $mpdf->WriteHTML($tablebody2);
 $mpdf->WriteHTML($tableend1);
 $mpdf->Output("rpt_toppublisher.pdf");
 echo "<script>window.location = 'rpt_toppublisher.pdf'</script>";
-//echo '<a class="btn btn-success mb-4" href="MyReport.pdf" role="button">โหลดรายงาน</a>';
+// echo '<a class="btn btn-success mb-4" href="rpt_toppublisher.pdf" role="button">โหลดรายงาน</a>';
