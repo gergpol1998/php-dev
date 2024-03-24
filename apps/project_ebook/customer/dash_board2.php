@@ -111,41 +111,34 @@ if (!isset($_SESSION['cusid'])) {
                 INNER JOIN publisher ON publisher.pub_id = book.book_pubid
                 INNER JOIN customer ON customer.cus_id = publisher.pub_cusid";
                 $where = "pub_id = '$pubid' AND YEAR(rec_date) = YEAR(CURRENT_DATE) AND rec_date <= CURRENT_DATE
-                GROUP BY new_date
+                GROUP BY recd_bookid, new_date
                 ORDER BY new_date ASC";
                 $sqlbook = select_where($col, $table, $where);
 
-                // สร้าง arrays สำหรับเก็บข้อมูลที่ดึงมาจากฐานข้อมูล
+                // Initialize arrays to store data
                 $book_names = array();
                 $sales = array();
-                $date = array();
+                $date_sales = array();
 
                 if ($sqlbook->num_rows > 0) {
-
                     while ($row = $sqlbook->fetch_assoc()) {
+                        $book_name = $row["book_name"];
+                        $total_quantity = $row['total_quantity'];
+                        $new_date = $row['new_date'];
 
+                        // If the date already exists, add the sales to the existing date_sales array
+                        if (array_key_exists($new_date, $date_sales)) {
+                            $date_sales[$new_date][$book_name] = $total_quantity;
+                        } else {
+                            // Otherwise, create a new entry in date_sales array
+                            $date_sales[$new_date] = array($book_name => $total_quantity);
+                        }
 
-                        array_push($book_names, $row["book_name"]);
-                        array_push($sales, $row['total_quantity']);
-                        array_push($date, $row['new_date']);
-                    }
-
-                    // สร้างตัวแปรเก็บวันที่ทั้งหมดของเดือน 01-12
-                    $all_months = array_map(function ($month) {
-                        return sprintf("%02d", $month);
-                    }, range(1, 12));
-
-                    // ตรวจสอบและเติมข้อมูลที่หายไป
-                    foreach ($all_months as $month) {
-                        if (!in_array($month, $date)) {
-                            array_push($date, $month);
-                            array_push($book_names, "");
-                            array_push($sales, "0");
+                        // Store unique book names
+                        if (!in_array($book_name, $book_names)) {
+                            $book_names[] = $book_name;
                         }
                     }
-
-                    // เรียงลำดับตามวันที่
-                    array_multisort($date, $book_names, $sales);
                 } else {
                     echo "ไม่พบข้อมูล";
                 }
@@ -153,51 +146,75 @@ if (!isset($_SESSION['cusid'])) {
             connectdb()->close();
         }
 
-        $dataPoints = array();
-        $labels = $date;
-        $values = $sales;
-        $books = $book_names; 
-
-        // Loop through the labels, values, and books arrays to populate $dataPoints
-        for ($i = 0; $i < count($labels); $i++) {
-            $dataPoints[] = array("label" => $labels[$i], "y" => $values[$i], "indexLabel" => $books[$i], "indexLabelFontColor" => "black");
-        }
-
         ?>
 
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
         <script>
-            window.onload = function() {
-                const d = new Date();
-                let year = d.getFullYear();
+            const ctx = document.getElementById('myChart');
 
-                var chart = new CanvasJS.Chart("chartContainer", {
-                    animationEnabled: true,
-                    theme: "light2",
-                    title: {
-                        text: "หนังสือขายดีในช่วงนี้"
-                    },
-                    axisY: {
-                        title: "จำนวนที่ขาย"
-                    },
-                    axisX: {
-                        title: `เดือนที่ขาย (ปี ${year})`
-                    },
-                    data: [{
-                        type: "column",
-                        yValueFormatString: "#,##0.##",
-                        indexLabel: "{y}",
-                        indexLabelPlacement: "inside",
-                        indexLabelFontColor: "white",
-                        dataPoints: <?php echo json_encode($dataPoints, JSON_NUMERIC_CHECK); ?>
-                    }]
+            // Convert PHP arrays to JavaScript arrays
+            var bookNames = <?php echo json_encode($book_names); ?>;
+            var dateSales = <?php echo json_encode($date_sales); ?>;
+
+            // Prepare datasets for Chart.js
+            var datasets = [];
+            for (var i = 0; i < bookNames.length; i++) {
+                var salesData = [];
+
+                // Iterate over dateSales to populate salesData for each book
+                for (var date in dateSales) {
+                    if (dateSales.hasOwnProperty(date)) {
+                        var sales = dateSales[date][bookNames[i]] || 0;
+                        salesData.push(sales);
+                    }
+                }
+
+                datasets.push({
+                    label: bookNames[i],
+                    data: salesData,
+                    borderWidth: 1
                 });
-                chart.render();
-
             }
-        </script>
 
-        <div id="chartContainer" style="height: 370px; width: 100%;"></div>
-        <script src="https://cdn.canvasjs.com/canvasjs.min.js"></script>
+            const current_year = new Date().getFullYear();
+            // Create the Chart.js chart
+            var myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(dateSales), // Use dates as labels
+                    datasets: datasets
+                },
+                options: {
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: Math.round // You can customize the formatter function as per your requirement
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: `เดือนที่ขาย ( ปี ${current_year} )`
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'จำนวน'
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        </script>
     </div>
 </body>
 <!-- Bootstrap JS -->

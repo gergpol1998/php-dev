@@ -29,10 +29,6 @@ if (!isset($_SESSION['cusid'])) {
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-    <!-- นำเข้า library Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-
 </head>
 
 <body>
@@ -130,19 +126,31 @@ if (!isset($_SESSION['cusid'])) {
                 ORDER BY rec_date ASC";
                 $sqlbook = select_where($col, $table, $where);
 
-                // สร้าง arrays สำหรับเก็บข้อมูลที่ดึงมาจากฐานข้อมูล
+                // Initialize arrays to store data
                 $book_names = array();
                 $sales = array();
-                $date = array();
+                $date_sales = array();
 
                 if ($sqlbook->num_rows > 0) {
 
                     while ($row = $sqlbook->fetch_assoc()) {
 
+                        $book_name = $row["book_name"];
+                        $total_quantity = $row['total_quantity'];
+                        $new_date = $row['new_date'];
 
-                        array_push($book_names, $row["book_name"]);
-                        array_push($sales, $row['total_quantity']);
-                        array_push($date, $row['new_date']);
+                        // If the date already exists, add the sales to the existing date_sales array
+                        if (array_key_exists($new_date, $date_sales)) {
+                            $date_sales[$new_date][$book_name] = $total_quantity;
+                        } else {
+                            // Otherwise, create a new entry in date_sales array
+                            $date_sales[$new_date] = array($book_name => $total_quantity);
+                        }
+
+                        // Store unique book names
+                        if (!in_array($book_name, $book_names)) {
+                            $book_names[] = $book_name;
+                        }
                     }
                 } else {
                     echo "ไม่พบข้อมูล";
@@ -152,49 +160,46 @@ if (!isset($_SESSION['cusid'])) {
         }
         ?>
 
-        <!-- สร้างกราฟแท่งด้วย canvas -->
-        <canvas id="myChart"></canvas>
+        <div>
+            <canvas id="myChart"></canvas>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <script>
-            // Sample data for demonstration purposes
+            const ctx = document.getElementById('myChart');
+
+            // Convert PHP arrays to JavaScript arrays
             var bookNames = <?php echo json_encode($book_names); ?>;
-            var salesData = <?php echo json_encode($sales); ?>;
-            var datasets = []; // Array to store datasets
+            var dateSales = <?php echo json_encode($date_sales); ?>;
 
-            // Define an array of dynamic colors
-            var dynamicColors = function() {
-                var r = Math.floor(Math.random() * 255);
-                var g = Math.floor(Math.random() * 255);
-                var b = Math.floor(Math.random() * 255);
-                return "rgba(" + r + "," + g + "," + b + ", 0.2)";
-            };
-
-            // Loop through book names to create datasets
+            // Prepare datasets for Chart.js
+            var datasets = [];
             for (var i = 0; i < bookNames.length; i++) {
-                var dataset = {
-                    label: bookNames[i],
-                    data: [], // Array to store sales data for the current book
-                    backgroundColor: dynamicColors(), // Use dynamicColors function for dynamic color
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1
-                };
+                var salesData = [];
 
-                // Loop through sales data to extract sales values for the current book
-                for (var j = 0; j < salesData.length; j++) {
-                    dataset.data.push(salesData[j][i]); // Assuming the sales amount is stored in the 'amount' property
+                // Iterate over dateSales to populate salesData for each book
+                for (var date in dateSales) {
+                    if (dateSales.hasOwnProperty(date)) {
+                        var sales = dateSales[date][bookNames[i]] || 0;
+                        salesData.push(sales);
+                    }
                 }
 
-                // Add the dataset to the array
-                datasets.push(dataset);
+                datasets.push({
+                    label: bookNames[i],
+                    data: salesData,
+                    borderWidth: 1
+                });
             }
 
-            // Create the chart
-            var ctx = document.getElementById('myChart').getContext('2d');
+            const current_year = new Date().getFullYear();
+            // Create the Chart.js chart
             var myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: <?php echo json_encode($date); ?>,
-                    datasets: datasets // Assign dynamically generated datasets
+                    labels: Object.keys(dateSales), // Use dates as labels
+                    datasets: datasets
                 },
                 options: {
                     plugins: {
@@ -208,13 +213,13 @@ if (!isset($_SESSION['cusid'])) {
                         x: {
                             title: {
                                 display: true,
-                                text: 'วันที่ขาย'
+                                text: 'เดือนที่ขาย'
                             }
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: 'จำนวนขาย'
+                                text: 'จำนวน'
                             },
                             beginAtZero: true
                         }
@@ -222,6 +227,8 @@ if (!isset($_SESSION['cusid'])) {
                 }
             });
         </script>
+
+
 
     </div>
 </body>
