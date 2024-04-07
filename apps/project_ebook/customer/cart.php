@@ -214,7 +214,7 @@ if (!isset($_SESSION['cusid'])) {
                 };
 
                 $.ajax({
-                    url: "http://localhost:5002/recommendation",
+                    url: "http://45.136.238.139:5002/recommendation",
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify(requestData),
@@ -281,7 +281,7 @@ if (!isset($_SESSION['cusid'])) {
                 };
 
                 $.ajax({
-                    url: "http://localhost:5001/recommendation",
+                    url: "http://45.136.238.139:5001/recommendation",
                     type: "POST",
                     contentType: "application/json",
                     data: JSON.stringify(requestData),

@@ -1,4 +1,5 @@
 <?php
+ini_set('pcre.backtrack_limit', 2000000);
 include("../func.php");
 conn();
 session_start();
@@ -122,9 +123,10 @@ while ($row = $sql->fetch_assoc()) {
 }
 
 //ปิด tag
+$formattedtotal= number_format($total, 0, '.', ',');
 $tableend1 = "</tbody></table>";
 $totalDisplay = "<div style='margin-top: 10px; font-size: 12pt; text-align: right;'>
-    <strong>Total Amount: " . $total . "</strong>
+    <strong>Total Amount: " . $formattedtotal . "</strong>
 </div>";
 $mpdf->WriteHTML($tableh1);
 $mpdf->WriteHTML($tablebody);
@@ -132,5 +134,6 @@ $mpdf->WriteHTML($tablebody2);
 $mpdf->WriteHTML($tableend1);
 $mpdf->WriteHTML($totalDisplay);
 $mpdf->Output("rpt_income.pdf");
-echo "<script>window.location = 'rpt_income.pdf'</script>";
+echo "<script>window.open('rpt_income.pdf', '_blank');</script>";
+echo "<script>window.location = 'rpt_income_expense.php'</script>";
 //echo '<a class="btn btn-success mb-4" href="MyReport.pdf" role="button">โหลดรายงาน</a>';

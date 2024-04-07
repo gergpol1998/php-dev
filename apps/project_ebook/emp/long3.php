@@ -10,22 +10,18 @@ $data = array(
     "pub b" => array(
         "book 4" => 1,
         "book 5" => 4,
-
+        "book 6" => 2,
     ),
     "pub c" => array(
-        "book 6" => 2,
-        "book 7" => 1,
-        "book 8" => 4,
+        "book 7" => 2,
+        "book 8" => 1,
+        "book 9" => 4,
     )
 );
-foreach ($data as $key => $books) {
-    echo "\"" . $key . "\",";
-}
-foreach ($data["pub a"] as $key => $dt) {
-    echo "\"" . $key . "\" = \"" . $dt . "\",";
-}
 
-
+// กำหนดชื่อแกน X และ Y
+$xAxisLabel = "ชื่อ";
+$yAxisLabel = "จำนวน";
 
 // เริ่มสร้างกราฟ
 ?>
@@ -48,20 +44,12 @@ foreach ($data["pub a"] as $key => $dt) {
             type: 'bar',
             data: {
                 labels: [
-                    <?php
-                    foreach ($data as $key => $books) {
-                        echo "\"" . $key . "\",";
-                    }
-                    ?>
+                    "pub 1","p2"
                 ],
                 datasets: [{
-                    label: 'กราฟ 1',
+                    label: 'xx',
                     data: [
-                        <?php
-                        foreach ($data as $key => $books) {
-                            echo $books['value1'] . ",";
-                        }
-                        ?>
+                        1, 
                     ],
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.2)',
@@ -71,19 +59,15 @@ foreach ($data["pub a"] as $key => $dt) {
                     ],
                     borderWidth: 1
                 }, {
-                    label: 'กราฟ 2',
+                    label: 'xy',
                     data: [
-                        <?php
-                        foreach ($data as $key => $books) {
-                            echo $books['value2'] . ",";
-                        }
-                        ?>
+                        1, 2, 1.5
                     ],
                     backgroundColor: [
-                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
                     ],
                     borderColor: [
-                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)',
                     ],
                     borderWidth: 1
                 }]
@@ -91,29 +75,20 @@ foreach ($data["pub a"] as $key => $dt) {
 
         });
     </script>
-
     <canvas id="myChart2" width="400" height="200"></canvas>
 
     <script>
         var ctx2 = document.getElementById('myChart2').getContext('2d');
-        var myChart2 = new Chart(ctx2, {
+        var myChart = new Chart(ctx2, {
             type: 'bar',
             data: {
                 labels: [
-                    <?php
-                    foreach ($data as $key => $books) {
-                        echo "\"" . $key . "\",";
-                    }
-                    ?>
+                    "pub 1", "pub 2", "pub 3"
                 ],
                 datasets: [{
-                    label: 'กราฟ 1',
+                    label: 'xx',
                     data: [
-                        <?php
-                        foreach ($data as $key => $books) {
-                            echo $books['value1'] . ",";
-                        }
-                        ?>
+                        1, 2, 1.5
                     ],
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.2)',
@@ -123,19 +98,15 @@ foreach ($data["pub a"] as $key => $dt) {
                     ],
                     borderWidth: 1
                 }, {
-                    label: 'กราฟ 2',
+                    label: 'xx',
                     data: [
-                        <?php
-                        foreach ($data as $key => $books) {
-                            echo $books['value2'] . ",";
-                        }
-                        ?>
+                        1, 2, 1.5
                     ],
                     backgroundColor: [
-                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 99, 132, 0.2)',
                     ],
                     borderColor: [
-                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)',
                     ],
                     borderWidth: 1
                 }]

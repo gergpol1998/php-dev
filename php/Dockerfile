@@ -17,8 +17,8 @@ RUN docker-php-ext-configure gd \
         --with-freetype \
         --with-webp \
         --with-xpm \
-    && docker-php-ext-install -j$(nproc) gd mysqli pdo pdo_mysql \
-    && docker-php-ext-enable gd mysqli
+    && docker-php-ext-install -j$(nproc) gd mysqli pdo pdo_mysql exif \
+    && docker-php-ext-enable gd mysqli exif
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

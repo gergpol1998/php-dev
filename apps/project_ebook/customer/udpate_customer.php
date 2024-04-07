@@ -8,7 +8,6 @@ if ($_POST['submit']){
     $cusid = $_POST['id'];
     $fname = $_POST['fname'];
     $lname = $_POST['lname'];
-    $password = hash('sha512',$password);
     $gender = $_POST['gender'];
     $email = $_POST['email'];
     $bdate = $_POST['bdate'];

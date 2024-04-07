@@ -1,8 +1,8 @@
 <?php
-error_reporting(E_ALL & ~E_WARNING);
-ini_set('display_errors', 'Off');
+//error_reporting(E_ALL & ~E_WARNING);
+//ini_set('display_errors', 'Off');
 function conn(){
-    $servername = "45.150.131.236:9906";
+    $servername = "45.136.238.139:9906";
     $username = "root";
     $password = "root";
     $db = "ebook";
@@ -139,5 +139,10 @@ function getsql($table,$values,$inputdata){
     
     return $sql;
 }
-
+function randomRGB() {
+    $r = rand(0, 255);
+    $g = rand(0, 255);
+    $b = rand(0, 255);
+    return "rgba($r, $g, $b, 1)";
+  }
 ?>

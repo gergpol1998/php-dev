@@ -1,4 +1,5 @@
 <?php
+ob_start();
 include "function.php";
 connectdb();
 session_start();
@@ -192,3 +193,4 @@ if (isset($_POST['submit'])) {
 }
 
 connectdb()->close();
+ob_end_flush();

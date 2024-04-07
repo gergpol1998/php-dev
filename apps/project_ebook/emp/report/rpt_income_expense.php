@@ -2,6 +2,7 @@
 include("../func.php");
 conn();
 session_start();
+error_reporting(0);
 $pos = $_SESSION['POS'];
 if (!isset($_SESSION["ID"])) {
     header("location:../login.php");
@@ -48,7 +49,7 @@ $permis = $row['permis'];
                 <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
                 <div class="divider-custom-line"></div>
             </div>
-
+            
             <div style="text-align:right">
                 <form action="./rpt_income_expense.php" method="post">
                     <input type="number" name="search" placeholder="year (example 2023)">

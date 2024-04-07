@@ -29,9 +29,6 @@ if (!isset($_SESSION['cusid'])) {
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-    <!-- นำเข้า library Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 </head>
 
 <body>
@@ -118,27 +115,42 @@ if (!isset($_SESSION['cusid'])) {
                 $row = $ex_pub->fetch_assoc();
                 $pubid = $row['pub_id'];
 
-                $col = "*,count(recd_bookid) as total_quantity";
+                $col = "recd_bookid,DATE_FORMAT(rec_date, '%Y-%m-%d') as new_date ,book_name,count(recd_bookid) as total_quantity";
                 $table = "book
                 INNER JOIN receipt_detail ON book.book_id = receipt_detail.recd_bookid
                 INNER JOIN receipt ON receipt.rec_id = receipt_detail.recd_recid
                 INNER JOIN publisher ON publisher.pub_id = book.book_pubid
                 INNER JOIN customer ON customer.cus_id = publisher.pub_cusid";
                 $where = "DATE_FORMAT(rec_date, '%Y-%m-%d') BETWEEN '$start_date' AND '$end_date' AND pub_id = '$pubid'
-                GROUP BY recd_bookid";
+                GROUP BY recd_bookid
+                ORDER BY total_quantity DESC";
                 $sqlbook = select_where($col, $table, $where);
 
-                // สร้าง arrays สำหรับเก็บข้อมูลที่ดึงมาจากฐานข้อมูล
+                // Initialize arrays to store data
                 $book_names = array();
                 $sales = array();
+                $date_sales = array();
 
                 if ($sqlbook->num_rows > 0) {
 
                     while ($row = $sqlbook->fetch_assoc()) {
 
+                        $book_name = $row["book_name"];
+                        $total_quantity = $row['total_quantity'];
+                        $new_date = $row['new_date'];
 
-                        array_push($book_names, $row["book_name"]);
-                        array_push($sales, $row['total_quantity']);
+                        // If the date already exists, add the sales to the existing date_sales array
+                        if (array_key_exists($new_date, $date_sales)) {
+                            $date_sales[$new_date][$book_name] = $total_quantity;
+                        } else {
+                            // Otherwise, create a new entry in date_sales array
+                            $date_sales[$new_date] = array($book_name => $total_quantity);
+                        }
+
+                        // Store unique book names
+                        if (!in_array($book_name, $book_names)) {
+                            $book_names[] = $book_name;
+                        }
                     }
                 } else {
                     echo "ไม่พบข้อมูล";
@@ -148,33 +160,75 @@ if (!isset($_SESSION['cusid'])) {
         }
         ?>
 
-        <!-- สร้างกราฟแท่งด้วย canvas -->
-        <canvas id="myChart"></canvas>
+        <div>
+            <canvas id="myChart" width="800" height="600"></canvas>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <script>
-            // สร้างกราฟแท่ง
-            var ctx = document.getElementById('myChart').getContext('2d');
+            const ctx = document.getElementById('myChart');
+
+            // Convert PHP arrays to JavaScript arrays
+            var bookNames = <?php echo json_encode($book_names); ?>;
+            var dateSales = <?php echo json_encode($date_sales); ?>;
+
+            // Prepare datasets for Chart.js
+            var datasets = [];
+            for (var i = 0; i < bookNames.length; i++) {
+                var salesData = [];
+
+                // Iterate over dateSales to populate salesData for each book
+                for (var date in dateSales) {
+                    if (dateSales.hasOwnProperty(date)) {
+                        var sales = dateSales[date][bookNames[i]] || 0;
+                        salesData.push(sales);
+                    }
+                }
+
+                datasets.push({
+                    label: bookNames[i],
+                    data: salesData,
+                    borderWidth: 1
+                });
+            }
+
+            // Create the Chart.js chart
             var myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: <?php echo json_encode($book_names); ?>,
-                    datasets: [{
-                        label: 'จำนวนขาย',
-                        data: <?php echo json_encode($sales); ?>,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    }]
+                    labels: bookNames, // Change this line to use bookNames array
+                    datasets: datasets
                 },
                 options: {
+                    plugins: {
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            formatter: Math.round // You can customize the formatter function as per your requirement
+                        }
+                    },
                     scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'หนังสือ' // Change the x-axis title to 'ชื่อหนังสือ' (Book Name)
+                            }
+                        },
                         y: {
+                            title: {
+                                display: true,
+                                text: 'จำนวน'
+                            },
                             beginAtZero: true
                         }
                     }
                 }
             });
         </script>
+
+
+
     </div>
 </body>
 <!-- Bootstrap JS -->

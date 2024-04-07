@@ -1,160 +1,213 @@
-<style>
-    .message {
-        max-width: 100%;
-        word-wrap: break-word;
-    }
+<!DOCTYPE html>
+<html lang="en">
 
-    .message-received {
-        background-color: #f1f0f0;
-        border-radius: 15px;
-        padding: 5px 5px;
-        margin-right: auto;
-        margin-left: 0;
-    }
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
 
-    .message-user {
-        background-color: lightgreen;
-        border-radius: 15px;
-        padding: 5px 5px;
-        margin-left: auto;
-        margin-right: 0;
-    }
+        .chat-container {
+            max-width: 500px;
+            margin: 20px auto;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
 
-    .chat-message {
-        display: flex;
-        justify-content: flex-end;
-    }
+        .chat-box {
+            height: 300px;
+            overflow-y: scroll;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
 
-    .chatbot-container {
-        display: none;
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1000;
-        max-width: 400px; /* ปรับขนาดความกว้างสูงสุดของ chatbot container */
-    }
+        .chat-button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+        }
 
-    .card {
-        width: 100%;
-    }
+        .chat-button:hover {
+            background-color: #0056b3;
+        }
 
-    .card-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+        /* Chatbot Container */
+        #chatbot-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 600px;
+        }
 
-    .card-footer input {
-        flex: 1;
-        margin-right: 10px;
-    }
-</style>
+        /* Chatbot Toggle Button */
+        #chatbot-toggle-button {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            cursor: pointer;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
 
+        .message-container {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        }
 
-<button id="show-chatbot" class="btn btn-primary mt-3 open-chatbot-button" style="position: fixed; bottom: 20px; right: 20px;">Open ChatBot</button>
+        .message-text {
+            margin: 0;
+        }
 
-<div class="chatbot-container">
-    <div class="card">
-        <div class="card-header bg-primary text-white">ChatBot
-            <button id="close-chatbot" class="btn btn-light btn-sm close-chatbot-button">Close</button>
-        </div>
-        <div class="card-body" id="chat-container" style="overflow-y: auto; max-height: 400px;">
-            <div class="chat-message">
-                <div class="message message-received" style="text-align: left;">มีอะไรให้ฉันช่วยไหม</div>
-            </div>            
-        </div>
-        <div class="card-footer">
-            <input type="text" id="user-message" class="form-control" placeholder="Type your message...">
-            <button id="send-button" class="btn btn-primary mt-3">Send</button>
+        .category-button {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 5px;
+            border: 1px solid #007bff;
+            background-color: #007bff;
+            color: #fff;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .category-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Chatbot Container -->
+    <div id="chatbot-container" style="display: none;">
+        <div class="chat-container">
+            <div class="chat-box" id="chat-box"></div>
+            <input type="button" class="chat-button" value="หนังสือแนะนำประจำเดือน" data-question="หนังสือแนะนำประจำเดือน">
+            <input type="button" class="chat-button" value="แนะนำหนังสือตามหมวดหมู่" data-question="แนะนำหนังสือตามหมวดหมู่">
+            <input type="button" class="chat-button" value="เกี่ยวกับเว็บไซต์ของเรา" data-question="เกี่ยวกับเว็บไซต์ของเรา">
         </div>
     </div>
-</div>
 
-<script>
-    $(document).ready(function () {
-        const showChatbotButton = $('#show-chatbot');
-        const closeChatbotButton = $('#close-chatbot');
-        const userMessageInput = $('#user-message');
-        const sendButton = $('#send-button');
-        const chatContainer = $('#chat-container');
+    <!-- Chatbot Toggle Button -->
+    <div id="chatbot-toggle-button" onclick="toggleChatbot()">Chatbot</div>
 
-        showChatbotButton.on('click', function () {
-            $('.chatbot-container').css('display', 'block');
-            showChatbotButton.css('display', 'none');
-            chatContainer.scrollTop(chatContainer.prop("scrollHeight"));
-        });
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // JavaScript (script.js)
+        var chatbotContainer = document.getElementById("chatbot-container");
+        var chatbotToggleButton = document.getElementById("chatbot-toggle-button");
 
-        closeChatbotButton.on('click', function () {
-            $('.chatbot-container').css('display', 'none');
-            showChatbotButton.css('display', 'block');
-        });
+        function toggleChatbot() {
+            if (chatbotContainer.style.display === "none") {
+                chatbotContainer.style.display = "block";
+            } else {
+                chatbotContainer.style.display = "none";
+            }
+        }
 
-        sendButton.on('click', sendMessage);
+        $(document).ready(function() {
 
-        function sendMessage() {
-            const userMessage = userMessageInput.val();
-            if (userMessage.trim() === '') return;
+            // เรียกใช้งานฟังก์ชัน displayMessage เพื่อแสดงข้อความ "สวัสดี" เมื่อเริ่มต้น
+            displayMessage("สวัสดี ฉันคือ chatbot ต้องการให้ช่วยอะไรครับ");
 
-            addMessage(userMessage, 'user');
-
-            const loadingMessage = `<div class="message message-loading"><p>Loading...</p></div>`;
-            addMessage(loadingMessage, 'bot');
-
-            const requestData = {
-                query: userMessage
-            };
-
-            $.ajax({
-                type: 'POST',
-                url: 'http://localhost:5003/chat',
-                contentType: 'application/json',
-                data: JSON.stringify(requestData),
-                success: function (data) {
-                    console.log(data);
-                    const dataArray = data.data;
-                    let botResponse = '';
-
-                    if (dataArray.length > 0) {
-                        botResponse += '<div class="message message-received"><p>Data:</p><ul>';
-                        dataArray.forEach((item, index) => {
-                            botResponse += `
-                                <li>
-                                    <b>หน้าปก:</b><br>
-                                    <a href="search_content.php?bookid=${item.book_id}">
-                                        <img src="${item.image_url}" alt="book-image" style="max-width: 200px; max-height: 200px;">
-                                    </a><br>
-                                    <b>ชื่อเรื่อง:</b> ${item.book_name}<br>
-                                    <b>เรื่องย่อ:</b> ${item.book_summary}<br>
-                                </li>
-                            `;
-                        });
-                        botResponse += '</ul></div>';
-                    }
-
-                    addMessage(botResponse, 'bot');
-                },
-                error: function (error) {
-                    console.error('Error:', error);
-                    const errorMessage = `<div class="message message-received"><p>An error occurred. Please try again later.</p></div>`;
-                    addMessage(errorMessage, 'bot');
-                },
-                complete: function () {
-                    $('.message-loading').remove();
-                    chatContainer.scrollTop(chatContainer.prop("scrollHeight"));
+            // ปุ่ม "หนังสือ" และ "ปุ่มหมวดหมู่หนังสือ" จะถูกแสดงเมื่อกดปุ่ม "หนังสือ"
+            $(document).on("click", ".chat-button", function() {
+                var question = $(this).data("question");
+                if (question === "แนะนำหนังสือตามหมวดหมู่") {
+                    $.ajax({
+                        type: "POST",
+                        url: "http://45.136.238.139:3000/v1/ask",
+                        contentType: "application/json",
+                        data: JSON.stringify({
+                            question: question
+                        }),
+                        success: function(response) {
+                            console.log(response);
+                            displayCategories(response.answer);
+                        },
+                        error: function(xhr, status, error) {
+                            console.error(error);
+                        }
+                    });
+                } else {
+                    sendQuestion(question);
                 }
             });
 
-            userMessageInput.val('');
-        }
+            // ปุ่ม "หมวดหมู่หนังสือ" จะถูกแสดงเมื่อผู้ใช้เลือกหมวดหมู่ที่ต้องการ
+            $(document).on("click", ".category-button", function() {
+                var category = $(this).data("category");
+                sendQuestion(category);
+            });
 
-        function addMessage(message, sender) {
-            const messageElement = `
-                <div class="chat-message message message-${sender.toLowerCase()}">
-                    <div class="message message-${sender.toLowerCase()}" style="text-align: ${sender === 'user' ? 'right' : 'left'}; width: 100%;">
-                        <p>${message}</p>
-                    </div>
-                </div>`;
-            chatContainer.append(messageElement);
-        }
-    });
-</script>
+            function sendQuestion(question) {
+                $.ajax({
+                    type: "POST",
+                    url: "http://45.136.238.139:3000/v1/ask",
+                    contentType: "application/json",
+                    data: JSON.stringify({
+                        question: question
+                    }),
+                    success: function(response) {
+                        console.log(response);
+                        displayMessage(response.answer);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error(error);
+                    }
+                });
+            }
+
+            function displayMessage(message) {
+                if (typeof message === 'object' && message !== null) {
+                    var bookList = "<ul>";
+                    message.forEach(function(book) {
+                        bookList += "<div class='message-container'>";
+                        bookList += "<p class='message-text'>" + "ถ้างั้นขอแนะนำเป็นเรื่อง " + book.book_name + "</p>";
+                        bookList += '<a href="search_content.php?bookid=' + book.book_id + '">';
+                        bookList += '<img src="' + book.book_cover + '" alt="' + book.book_name + '"width="200px" height="200px">';
+                        bookList += '</a>';
+                        bookList += "<p class='message-text'>" + "เรื่องย่อ" + "</p>";
+                        bookList += "<p class='message-text'>" + book.book_summary + "</p>";
+                        bookList += '<p class="text-danger message-text">ราคา ' + book.book_price + ' <i class="fas fa-coins"></i></p>';
+                        bookList += "</div>";
+                    });
+                    bookList += "</ul>";
+                    $("#chat-box").append(bookList);
+                } else {
+                    $("#chat-box").append("<div class='message-container'><p class='message-text'>" + message + "</p></div>");
+                }
+            }
+
+            function displayCategories(categories) {
+                var categoryButtons = "";
+                categories.forEach(function(category) {
+                    categoryButtons += '<input type="button" class="category-button" value="' + category.type_name + '" data-category="' + category.type_name + '">';
+                });
+                $("#chat-box").html("<p>กรุณาเลือกหมวดหมู่หนังสือ:</p>" + categoryButtons);
+            }
+        });
+    </script>
+</body>
+
+</html>

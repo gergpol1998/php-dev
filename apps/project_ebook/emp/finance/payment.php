@@ -2,6 +2,7 @@
 include("../func.php");
 conn();
 session_start();
+error_reporting(0);
 $pos = $_SESSION['POS'];
 if (!isset($_SESSION["ID"])) {
     header("location:../login.php");

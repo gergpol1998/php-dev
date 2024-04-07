@@ -1,4 +1,5 @@
 <?php
+ini_set('pcre.backtrack_limit', 2000000);
 include("../func.php");
 conn();
 session_start();
@@ -67,7 +68,7 @@ $tableh1 = "
     <thead>
         <tr style='border:1px solid #000;padding:4px;'>
             <td  style='border-right:1px solid #000;padding:4px;text-align:center;'   width='10%'>ID</td>
-            <td  style='border-right:1px solid #000;padding:4px;text-align:center;'  width='15%'>CUSTOMER</td>
+            <td  style='border-right:1px solid #000;padding:4px;text-align:center;'  width='15%'>PUBLISHER</td>
             <td  style='border-right:1px solid #000;padding:4px;text-align:center;'  width='15%'>AMOUNT</td>
             <td  style='border-right:1px solid #000;padding:4px;text-align:center;' width='15%'>DATE</td> 
         </tr>
@@ -104,7 +105,7 @@ while ($row = $sql->fetch_assoc()) {
         <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $formattedAmount . '</td>
         <td style="border-right:1px solid #000;padding:3px;text-align:center;">' . $row['inc_month'] . '</td>     
     </tr>';
-    $total += $row['top_amount'];
+    $total += $row['inc_amount'];
 
 /*
     //show ในหน้าเว็บ
@@ -117,11 +118,11 @@ while ($row = $sql->fetch_assoc()) {
     </tr>';
 */
 }
-
+$formattedtotal= number_format($total, 0, '.', ',');
 //ปิด tag
 $tableend1 = "</tbody></table>";
 $totalDisplay = "<div style='margin-top: 10px; font-size: 12pt; text-align: right;'>
-    <strong>Total Amount: " . $total . "</strong>
+    <strong>Total Amount: " . $formattedtotal . "</strong>
 </div>";
 $mpdf->WriteHTML($tableh1);
 $mpdf->WriteHTML($tablebody);
@@ -129,5 +130,7 @@ $mpdf->WriteHTML($tablebody2);
 $mpdf->WriteHTML($tableend1);
 $mpdf->WriteHTML($totalDisplay);
 $mpdf->Output("rpt_expense.pdf");
-echo "<script>window.location = 'rpt_expense.pdf'</script>";
+
+echo "<script>window.open('rpt_expense.pdf', '_blank');</script>";
+echo "<script>window.location = 'rpt_income_expense.php'</script>";
 //echo '<a class="btn btn-success mb-4" href="MyReport.pdf" role="button">โหลดรายงาน</a>';

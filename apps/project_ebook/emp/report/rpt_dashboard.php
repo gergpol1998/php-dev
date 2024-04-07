@@ -4,7 +4,7 @@ conn();
 session_start();
 $pos = $_SESSION['POS'];
 if (!isset($_SESSION["ID"])) {
-    header("location:../login.php");
+  header("location:../login.php");
 }
 $row = mysqli_fetch_array(selectWhere('count(*) as permis', 'pos_per', "pp_posid='$pos' and pp_perid='PER-005'"));
 $permis = $row['permis'];
@@ -14,147 +14,176 @@ $permis = $row['permis'];
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <meta name="description" content="" />
-    <meta name="author" content="" />
-
-    <!-- Favicon-->
-    <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
-    <!-- Font Awesome icons (free version)-->
-    <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
-    <!-- Google fonts-->
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
-    <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
-    <!-- Core theme CSS (includes Bootstrap)-->
-    <link href="../css/styles.css" rel="stylesheet" />
-    <!-- นำเข้า library Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <meta name="description" content="" />
+  <meta name="author" content="" />
+  <!-- Favicon-->
+  <link rel="icon" type="image/x-icon" href="../assets/favicon.ico" />
+  <!-- Font Awesome icons (free version)-->
+  <script src="https://use.fontawesome.com/releases/v6.1.0/js/all.js" crossorigin="anonymous"></script>
+  <!-- Google fonts-->
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+  <link href="https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic" rel="stylesheet" type="text/css" />
+  <!-- Core theme CSS (includes Bootstrap)-->
+  <link href="../css/styles.css" rel="stylesheet" />
+  <!-- นำเข้า library Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+</head>
 </head>
 
 <body id="page-top">
 
-    <!-- Portfolio Section-->
-    <section class="page-section portfolio" id="portfolio">
-        <div class="container">
-            <!-- Portfolio Section Heading-->
-            <div text-align="left">
-                <a href="../index.php"><img class="img-fluid" src="../assets/img/portfolio/home.png" width="100" /></a>
-                <h2 class="page-section-heading text-center text-uppercase text-secondary mb-0">DashBoard</h2>
-            </div>
+  <!-- Portfolio Section-->
+  <section class="page-section portfolio" id="portfolio">
+    <div class="container">
+      <!-- Portfolio Section Heading-->
+      <div text-align="left">
+        <a href="../index.php"><img class="img-fluid" src="../assets/img/portfolio/home.png" width="100" /></a>
+        <h2 class="page-section-heading text-center text-uppercase text-secondary mb-0">DashBoard</h2>
+      </div>
 
-            <!-- Icon Divider-->
-            <div class="divider-custom">
+      <!-- Icon Divider-->
+      <div class="divider-custom">
 
-                <div class="divider-custom-line"></div>
-                <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
-                <div class="divider-custom-line"></div>
-            </div>
-            <form action="rpt_dashboard.php" method="post">
-                <div class="mb-3">
-                    <div>
-                        <label for="start_date" class="form-label">วันที่เริ่มต้น</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date">
-                    </div>
-                    <div>
-                        <label for="end_date" class="form-label">วันที่สิ้นสุด</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date">
-                    </div>
-                    <div>
-                        <label for="top" class="form-label">จำนวนอันดับ</label>
-                        <input type="number" class="form-control" id="top" name="top">
+        <div class="divider-custom-line"></div>
+        <div class="divider-custom-icon"><i class="fas fa-star"></i></div>
+        <div class="divider-custom-line"></div>
+      </div>
+      <div style="text-align:center">
+        <form action="./rpt_dashboard.php" method="post">
+          <?php
+          $years = [];
+          for ($i = 2030; $i >= 2015; $i--) {
+            $years[] = $i;
+          }
+          ?>
+          <select name="year">
+            <option value="">เลือกปี</option>
+            <?php foreach ($years as $year) : ?>
+              <option value="<?php echo $year; ?>"><?php echo $year; ?></option>
+            <?php endforeach; ?>
+          </select>
+          <input type="submit" name="submit1" value="ค้นหา" class="btn btn-primary">
+        </form>
 
-                    </div>
+      </div>
+      <?php
+      $i = 0;
+      if (isset($_POST['submit1'])) {
+        if ($_POST['year'] != null) {
+          $_SESSION['yy'] = $_POST['year'];
+        } else {
+          $_SESSION['yy'] = 'year(now())';
+        }
+      } else {
+        $_SESSION['yy'] = 'year(now())';
+      }
+      $yy = $_SESSION['yy'];
+      $pubname = select(
+        "pub_name,COUNT(recd_bookid) as n",
+        "receipt_detail INNER JOIN book ON recd_bookid = book_id 
+     INNER JOIN publisher ON book_pubid = pub_id 
+     INNER JOIN receipt ON rec_id = recd_recid
+     WHERE year(rec_date) = $yy
+     GROUP BY pub_name ORDER BY COUNT(recd_bookid) DESC limit 10"
+      );
+      function generateRandomColor()
+      {
+        $red = rand(0, 255);
+        $green = rand(0, 255);
+        $blue = rand(0, 255);
+        return "rgb($red, $green, $blue)";
+      }
 
-                </div>
+      $colors = [];
 
-                <button type="submit" class="btn btn-primary">ค้นหา</button>
-            </form>
-            <?php
 
-            if ((isset($_POST['start_date']) && $_POST['start_date'] != null) && isset($_POST['end_date']) && $_POST['end_date'] != null) {
-                // รับค่าช่วงเวลาจากฟอร์ม
-                $start_date = $_POST['start_date'];
-                $end_date = $_POST['end_date'];
-                if (isset($_POST['top']) && $_POST['top'] != null) {
-                    $top = $_POST['top'];
-                } else {
-                    $top = '10';
+
+      foreach ($pubname as $pub) {
+        $pn = $pub["pub_name"];
+        $n = $pub["n"];
+        $lb = array();
+        $dt = array();
+        $book = select(
+          "book_name, count(recd_bookid) as nb",
+          "receipt_detail INNER JOIN book ON recd_bookid = book_id 
+         INNER JOIN publisher ON book_pubid = pub_id 
+         INNER JOIN receipt ON rec_id = recd_recid
+         WHERE pub_name = '$pn' and year(rec_date) = $yy
+         GROUP BY book_name
+         ORDER BY count(recd_bookid) desc"
+        );
+
+
+      ?>
+        <h1>อันดับ <?php echo ($i + 1) . " : " . $pn ?> จำนวนหนังสือที่ขายได้ <?php echo $n . " เล่ม"; ?></h1>
+        <canvas id='myChart<?= $i ?>' width='200' height='100'></canvas>
+
+        <script>
+          var ctx<?= $i ?> = document.getElementById('myChart<?= $i ?>').getContext('2d');
+          var myChart<?= $i ?> = new Chart(ctx<?= $i ?>, {
+            type: 'bar',
+            data: {
+              labels: [
+                <?php
+                foreach ($book as $dt) {
+                  echo "'" . $dt['book_name'] . "',";
+                  $colors[] = generateRandomColor();
                 }
-                $sql = selectWhere(
-                    "book_pubid,pub_name,COUNT(recd_bookid) as amount",
-                    "receipt,receipt_detail,book,publisher",
-                    "(rec_id = recd_recid and recd_bookid=book_id and pub_id = book_pubid) 
-                                 AND (rec_date BETWEEN '$start_date' AND '$end_date')
-                                 group by book_pubid order by amount desc limit $top"
-                );
-                $pub = array();
-                $amount = array();
-                if ($sql->num_rows > 0) {
-
-                    while ($row = $sql->fetch_assoc()) {
-                        array_push($pub, $row["pub_name"]);
-                        array_push($amount, $row['amount']);
-                    }
-                } else {
-                    echo "ไม่พบข้อมูล";
-                }
-            } else{
-                echo "<script>window.alert('กรุณาระบุวันที่')</script>";
+                ?>
+              ],
+              datasets: [{
+                label: 'จำนวนหนังสือ',
+                data: [
+                  <?php
+                  foreach ($book as $dt) {
+                    echo "'" . $dt['nb'] . "',";
+                  }
+                  ?>
+                ],
+                backgroundColor: <?= json_encode($colors) ?>,
+              }]
+            },
+            options: {
+              // Add any additional Chart.js options here
             }
+          });
+        </script>
+      <?php
 
+        $i++;
+      }
 
-            ?>
-            <!-- สร้างกราฟแท่งด้วย canvas -->
-            <canvas id="myChart"></canvas>
-
-            <script>
-                // สร้างกราฟแท่ง
-                var ctx = document.getElementById('myChart').getContext('2d');
-                var myChart = new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: <?php echo json_encode($pub); ?>,
-                        datasets: [{
-                            label: 'จำนวนขาย',
-                            data: <?php echo json_encode($amount); ?>,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            </script>
-
-        </div>
-    </section>
+      ?>
 
 
 
-    </div>
 
-    <!-- Copyright Section-->
-    <div class="copyright py-4 text-center text-white">
+
+
+
+
+
+      <!-- Copyright Section-->
+      <div class="copyright py-4 text-center text-white">
         <div class="container"><small>Copyright &copy; Your Website 2023</small></div>
-    </div>
+      </div>
 
 
-    <!-- Bootstrap core JS-->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Core theme JS-->
-    <script src="js/scripts.js"></script>
-    <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-    <!-- * *                               SB Forms JS                               * *-->
-    <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
-    <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
-    <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+      <!-- Bootstrap core JS-->
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+      <!-- Core theme JS-->
+      <script src="js/scripts.js"></script>
+      <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+      <!-- * *                               SB Forms JS                               * *-->
+      <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
+      <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+      <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
 </body>
 
 </html>
